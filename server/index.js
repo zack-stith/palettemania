@@ -17,6 +17,18 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/palettes", paletteRouter);
 
+app.use((req, res) => {
+    res.status(404).json({ error: "Not found" });
+});
+
+app.use((err, req, res, next) => {
+    if (err.type === "entity.parse.failed") {
+        return res.status(400).json({ error: "Request must be valid JSON" });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong" });
+});
+
 try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");

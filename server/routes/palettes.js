@@ -17,7 +17,7 @@ function validationMessage(err) {
 }
 
 router.post("/", async (req, res) => {
-    const { name, colors, isPublic } = req.body;
+    const { name, colors, isPublic } = req.body ?? {};
 
     if (isPublic !== undefined && typeof isPublic !== "boolean") {
         return res.status(400).json({ error: "isPublic must be of type 'boolean'"});
@@ -96,13 +96,13 @@ router.get("/", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
     const { id } = req.params;
-    const { name, isPublic } = req.body;
+    const { name, colors, isPublic } = req.body ?? {};
 
     if (!mongoose.isValidObjectId(id)) {
         return res.status(404).json({ error: "Palette not found" });
     }
 
-    if (req.body.colors !== undefined) {
+    if (colors !== undefined) {
         return res.status(400).json({ error: "A palette's colors cannot be changed" });
     }
 
