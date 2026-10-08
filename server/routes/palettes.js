@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import Palette from "../models/Palette.js";
 import { normalizeHex } from "../utils/colorUtils.js";
 
@@ -20,6 +21,25 @@ router.post("/", async (req, res) => {
         if (err.name === "ValidationError") {
             return res.status(400).json({ error: err.message });
         }
+        console.error(err);
+        res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(404).json({ error: "Palette not found" });
+    }
+
+    try {
+        const palette = await Palette.findById(id);
+        if (palette === null) {
+            return res.status(404).json({ error: "Palette not found" });
+        }
+        res.json(palette);
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Something went wrong" });
     }
