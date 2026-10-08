@@ -1,4 +1,6 @@
+import "dotenv/config";
 import express from "express";
+import mongoose from "mongoose";
 
 const app = express();
 const PORT = 3000;
@@ -13,7 +15,14 @@ app.get("/api/health", (req, res) => {
     res.json({ "status": "ok"});
 });
 
-// Start listening for requests
-app.listen(PORT, () => {
-    console.log(`Server listening on http://localhost:${PORT}`);
-});
+try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("Connected to MongoDB");
+    // Start listening for requests
+    app.listen(PORT, () => {
+        console.log(`Server listening on http://localhost:${PORT}`);
+    });
+} catch (err) {
+    console.error(err);
+    process.exit(1);
+}
