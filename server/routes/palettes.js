@@ -19,6 +19,14 @@ function validationMessage(err) {
 router.post("/", async (req, res) => {
     const { name, colors, isPublic } = req.body;
 
+    if (isPublic !== undefined && typeof isPublic !== "boolean") {
+        return res.status(400).json({ error: "isPublic must be of type 'boolean'"});
+    }
+
+    if (name !== undefined && typeof name !== "string") {
+        return res.status(400).json({ error: "name must be of type 'string'"});
+    }
+
     if (!Array.isArray(colors)) {
         return res.status(400).json({ error: "colors must be an array" });
     }
@@ -100,6 +108,10 @@ router.patch("/:id", async (req, res) => {
 
     if (isPublic !== undefined && typeof isPublic !== "boolean") {
         return res.status(400).json({ error: "isPublic must be of type 'boolean'"});
+    }
+
+    if (name !== undefined && typeof name !== "string") {
+        return res.status(400).json({ error: "name must be of type 'string'"});
     }
 
     try {
