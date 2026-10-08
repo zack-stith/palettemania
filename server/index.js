@@ -11,9 +11,9 @@ app.get("/", (req, res) => {
 // When a GET request arrives for "/api/health"
 app.get("/api/health", (req, res) => {
     res.json({ "status": "ok"});
-})
+});
 
 // Start listening for requests
 app.listen(PORT, () => {
-    console.log("Server listening on http://localhost:${PORT}");
+    console.log(`Server listening on http://localhost:${PORT}`);
 });
