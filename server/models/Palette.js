@@ -52,10 +52,10 @@ const paletteSchema = new mongoose.Schema(
     { timestamps: true } // for createdAt and updatedAt
 );
 
-paletteSchema.index({ owner: 1, createdAt: -1 }); // A member's palettes, newest first
-paletteSchema.index({ isPublic: 1, createdAt: -1 }); // feed sorted by newest first
-paletteSchema.index({ isPublic: 1, likeCount: -1, createdAt: -1 }); // feed sorted by most liked first
-paletteSchema.index({ colors: 1 }); // all palettes containing a specified color
+paletteSchema.index({ owner: 1, createdAt: -1, _id: -1 }); // A member's palettes, newest first
+paletteSchema.index({ isPublic: 1, createdAt: -1, _id: -1 }); // feed sorted by newest first
+paletteSchema.index({ isPublic: 1, likeCount: -1, createdAt: -1, _id: -1 }); // feed sorted by most liked first
+paletteSchema.index({ colors: 1, _id: -1 }); // all palettes containing a specified color
 
 const Palette = mongoose.model("Palette", paletteSchema);
 export default Palette;
