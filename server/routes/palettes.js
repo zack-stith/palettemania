@@ -4,11 +4,17 @@ import Palette from "../models/Palette.js";
 import { normalizeHex } from "../utils/colorUtils.js";
 
 const router = express.Router();
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 24;
 const SORT_OPTIONS = {
     newest: { createdAt: -1, _id: -1 },
     likes: { likeCount: -1, createdAt: -1, _id: -1 },
 };
+
+function validationMessage(err) {
+    return Object.values(err.errors)
+        .map((e) => e.message)
+        .join(", ");
+}
 
 router.post("/", async (req, res) => {
     const { name, colors, isPublic } = req.body;
@@ -24,7 +30,7 @@ router.post("/", async (req, res) => {
         res.status(201).json(palette);
     } catch (err) {
         if (err.name === "ValidationError") {
-            return res.status(400).json({ error: err.message });
+            return res.status(400).json({ error: validationMessage(err) });
         }
         console.error(err);
         res.status(500).json({ error: "Something went wrong" });
@@ -78,6 +84,64 @@ router.get("/", async (req, res) => {
         res.status(500).json({ error: "Something went wrong" });
     }
 
+});
+
+router.patch("/:id", async (req, res) => {
+    const { id } = req.params;
+    const { name, isPublic } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(404).json({ error: "Palette not found" });
+    }
+
+    if (req.body.colors !== undefined) {
+        return res.status(400).json({ error: "A palette's colors cannot be changed" });
+    }
+
+    if (isPublic !== undefined && typeof isPublic !== "boolean") {
+        return res.status(400).json({ error: "isPublic must be of type 'boolean'"});
+    }
+
+    try {
+        const palette = await Palette.findById(id);
+        if (palette === null) {
+            return res.status(404).json({ error: "Palette not found" });
+        }
+        // TODO Phase 2: 403 unless the logged-in member owns it
+        if (name !== undefined) palette.name = name;
+        if (isPublic !== undefined) palette.isPublic = isPublic;
+
+        await palette.save();
+        res.json(palette);
+    } catch (err) {
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ error: validationMessage(err) });
+        }
+        console.error(err);
+        res.status(500).json({ error: "Something went wrong" });
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(404).json({ error: "Palette not found" });
+    }
+
+    try {
+        const palette = await Palette.findById(id);
+        if (palette === null) {
+            return res.status(404).json({ error: "Palette not found"});
+        }
+        // TODO Phase 2: 403 unless the logged-in member owns it
+        // TODO Phase 4: retire instead if others have liked it
+        await palette.deleteOne();
+        res.status(204).end();
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Something went wrong" });
+    }
 });
 
 export default router;
