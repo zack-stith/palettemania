@@ -1,6 +1,7 @@
 import Palette from "../models/Palette.js";
 
 // Scratch tool for checking Palette Schema functionality
+// Run from server/: node scripts/checkPalette.js
 
 const p = new Palette({ name: "Sunshine", colors: ["#F45E1C", "#300C15"] });
 const err = p.validateSync();
