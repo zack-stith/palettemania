@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Palette from "../models/Palette.js";
 import { normalizeHex } from "../utils/colorUtils.js";
+import { validationMessage } from "../utils/utils.js";
 
 const router = express.Router();
 const PAGE_SIZE = 24;
@@ -10,21 +11,15 @@ const SORT_OPTIONS = {
     likes: { likeCount: -1, createdAt: -1, _id: -1 },
 };
 
-function validationMessage(err) {
-    return Object.values(err.errors)
-        .map((e) => e.message)
-        .join(", ");
-}
-
 router.post("/", async (req, res) => {
     const { name, colors, isPublic } = req.body ?? {};
 
     if (isPublic !== undefined && typeof isPublic !== "boolean") {
-        return res.status(400).json({ error: "isPublic must be of type 'boolean'"});
+        return res.status(400).json({ error: "isPublic must be of type 'boolean'" });
     }
 
     if (name !== undefined && typeof name !== "string") {
-        return res.status(400).json({ error: "name must be of type 'string'"});
+        return res.status(400).json({ error: "name must be of type 'string'" });
     }
 
     if (!Array.isArray(colors)) {

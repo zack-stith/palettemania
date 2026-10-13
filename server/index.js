@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 
 import paletteRouter from "./routes/palettes.js";
+import authRouter from "./routes/auth.js";
 
 
 const app = express();
@@ -16,6 +17,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/palettes", paletteRouter);
+
+app.use("/api/auth", authRouter);
 
 app.use((req, res) => {
     res.status(404).json({ error: "Not found" });
