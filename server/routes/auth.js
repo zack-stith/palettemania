@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { validationMessage } from "../utils/utils.js";
+import { setAuthCookie } from "../utils/auth.js";
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.post("/register", async (req, res) => {
     try {
         const passwordHash = await bcrypt.hash(password, 12);
         const user = await User.create({ username, email, passwordHash });
+        setAuthCookie(res, user._id);
         res.status(201).json(user);
     } catch (err) {
         if (err.name === "ValidationError") {
