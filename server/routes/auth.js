@@ -2,7 +2,8 @@ import express from "express";
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { validationMessage } from "../utils/utils.js";
-import { setAuthCookie } from "../utils/auth.js";
+import { setAuthCookie, clearAuthCookie } from "../utils/auth.js";
+import requireLogin from "../middleware/requireLogin.js";
 
 const invalidLoginMessage = "invalid login credentials";
 
@@ -83,7 +84,15 @@ router.post("/login", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Something went wrong" });
     }
+});
 
+router.get("/me", requireLogin, (req, res) => {
+    res.json(req.user);
+});
+
+router.post("/logout", requireLogin, (req, res) => {
+    clearAuthCookie(res);
+    res.sendStatus(204);
 });
 
 export default router;

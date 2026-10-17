@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
 import paletteRouter from "./routes/palettes.js";
 import authRouter from "./routes/auth.js";
@@ -10,6 +11,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(cookieParser());
 
 // ROUTES
 app.get("/api/health", (req, res) => {
