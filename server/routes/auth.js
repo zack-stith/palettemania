@@ -4,6 +4,8 @@ import User from "../models/User.js";
 import { validationMessage } from "../utils/utils.js";
 import { setAuthCookie } from "../utils/auth.js";
 
+const invalidLoginMessage = "invalid login credentials";
+
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
@@ -46,6 +48,42 @@ router.post("/register", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Something went wrong" });
     }
+});
+
+router.post("/login", async (req, res) => {
+    const { identifier, password: passwordAttempt } = req.body ?? {};
+
+    if (typeof identifier !== "string") {
+        return res.status(400).json({ error: "identifier must be of type 'string'" });
+    }
+
+    if (typeof passwordAttempt !== "string") {
+        return res.status(400).json({ error: "password must be of type 'string'" });
+    }
+
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+
+    try {
+        const user = await User.findOne({ $or: [{ usernameLower: normalizedIdentifier }, { email: normalizedIdentifier }] });
+
+        if (!user) {
+            return res.status(401).json({ error: invalidLoginMessage });
+        }
+
+        const storedHash = user.passwordHash;
+        const passwordsMatch = await bcrypt.compare(passwordAttempt, storedHash);
+
+        if (!passwordsMatch) {
+            return res.status(401).json({ error: invalidLoginMessage });
+        }
+        
+        setAuthCookie(res, user._id);
+        res.status(200).json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Something went wrong" });
+    }
+
 });
 
 export default router;
