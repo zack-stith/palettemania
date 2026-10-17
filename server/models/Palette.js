@@ -5,7 +5,8 @@ const paletteSchema = new mongoose.Schema(
         owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            // TODO Phase 2: make required (once users exist)
+            required: [true, "Owner is required"],
+            immutable: true,
         },
 
         name: {

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Palette from "../models/Palette.js";
 import { normalizeHex } from "../utils/colorUtils.js";
 import { validationMessage } from "../utils/utils.js";
+import requireLogin, { optionalLogin } from "../middleware/requireLogin.js";
 
 const router = express.Router();
 const PAGE_SIZE = 24;
@@ -11,7 +12,7 @@ const SORT_OPTIONS = {
     likes: { likeCount: -1, createdAt: -1, _id: -1 },
 };
 
-router.post("/", async (req, res) => {
+router.post("/", requireLogin, async (req, res) => {
     const { name, colors, isPublic } = req.body ?? {};
 
     if (isPublic !== undefined && typeof isPublic !== "boolean") {
@@ -29,7 +30,7 @@ router.post("/", async (req, res) => {
     const normalizedColors = colors.map((c) => normalizeHex(c));
 
     try {
-        const palette = await Palette.create({ name, colors: normalizedColors, isPublic });
+        const palette = await Palette.create({ owner: req.user._id, name, colors: normalizedColors, isPublic });
         res.status(201).json(palette);
     } catch (err) {
         if (err.name === "ValidationError") {
@@ -40,7 +41,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", optionalLogin, async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
@@ -52,6 +53,14 @@ router.get("/:id", async (req, res) => {
         if (palette === null) {
             return res.status(404).json({ error: "Palette not found" });
         }
+        
+        const isOwner = req.user && palette.owner.equals(req.user._id);
+
+        if (!palette.isPublic && !isOwner) {
+            return res.status(404).json({ error: "Palette not found" });
+        }
+        // TODO Phase 4: retired palettes visible only to the owner's likers
+
         res.json(palette);
     } catch (err) {
         console.error(err);
@@ -89,7 +98,7 @@ router.get("/", async (req, res) => {
 
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireLogin, async (req, res) => {
     const { id } = req.params;
     const { name, colors, isPublic } = req.body ?? {};
 
@@ -114,7 +123,11 @@ router.patch("/:id", async (req, res) => {
         if (palette === null) {
             return res.status(404).json({ error: "Palette not found" });
         }
-        // TODO Phase 2: 403 unless the logged-in member owns it
+        
+        if (!palette.owner.equals(req.user._id)) {
+            return res.status(403).json({ error: "You can only change palettes you own" });
+        }
+
         if (name !== undefined) palette.name = name;
         if (isPublic !== undefined) palette.isPublic = isPublic;
 
@@ -129,7 +142,7 @@ router.patch("/:id", async (req, res) => {
     }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireLogin, async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
@@ -141,7 +154,11 @@ router.delete("/:id", async (req, res) => {
         if (palette === null) {
             return res.status(404).json({ error: "Palette not found"});
         }
-        // TODO Phase 2: 403 unless the logged-in member owns it
+        
+        if (!palette.owner.equals(req.user._id)) {
+            return res.status(403).json({ error: "You can only delete palettes you own" });
+        }
+
         // TODO Phase 4: retire instead if others have liked it
         await palette.deleteOne();
         res.status(204).end();
