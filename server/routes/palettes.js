@@ -49,12 +49,12 @@ router.get("/:id", optionalLogin, async (req, res) => {
     }
 
     try {
-        const palette = await Palette.findById(id);
+        const palette = await Palette.findById(id).populate("owner", "username");
         if (palette === null) {
             return res.status(404).json({ error: "Palette not found" });
         }
         
-        const isOwner = req.user && palette.owner.equals(req.user._id);
+        const isOwner = req.user && palette.owner?._id.equals(req.user._id);
 
         if (!palette.isPublic && !isOwner) {
             return res.status(404).json({ error: "Palette not found" });
@@ -85,7 +85,8 @@ router.get("/", async (req, res) => {
         const results = await Palette.find(filter)
             .sort(SORT_OPTIONS[sort])
             .skip((page - 1) * PAGE_SIZE)
-            .limit(PAGE_SIZE + 1);
+            .limit(PAGE_SIZE + 1)
+            .populate("owner", "username");
 
         const hasMore = results.length > PAGE_SIZE;
         const items = results.slice(0, PAGE_SIZE);
